@@ -6,26 +6,40 @@ $vendor = '3PARdata'
 
 ##################### DO NOT EDIT BEYOND THIS LINE ###########################
 
+#### FUNCTIONS
 
-# UNMAP operation can be long, remove timeout
-$timeout = Set-PowerCLIConfiguration -WebOperationTimeoutSeconds -1 -Scope Session -Confirm:$false
+function PrepareScript () {
+  # UNMAP operation can be long, remove timeout
+  $timeout = Set-PowerCLIConfiguration -WebOperationTimeoutSeconds -1 -Scope Session -Confirm:$false
+  # Ignore Certificates Warning while connecting to host
+  $certificate = Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope Session -Confirm:$false
+}
 
-# Ignore Certificates Warning while connecting to host
-$certificate = Set-PowerCLIConfiguration -InvalidCertificateAction Ignore -Scope Session -Confirm:$false
 
-# Prompt for ESXi IP or FQDN
-$esxi = read-host "Enter host IP or FQDN"
+function ConnectionToHost () {
+  $esxi = read-host "Enter host IP or FQDN" # Prompt for ESXi IP or FQDN
+  Connect-VIServer -Server $esxi #Connection to the host
+  write-host
+}
 
-#Connection to the host
-Connect-VIServer -Server $esxi
+function GetEsxCli () {
+  $esxcli = get-vmhost -Name $esxi | Get-EsxCli
+}
 
-write-host
+#### SCRIPT
 
-$esxcli = get-vmhost -Name $esxi | Get-EsxCli
+PrepareScript
+ConnectionToHost
+GetEsxCli
 
-foreach ($datastore in Get-Datastore) {
 
-  Write-Host "Processing Datastore $($datastore.name) :" -ForegroundColor Green
+$datastores = Get-Datastore
+
+foreach ($datastore in $datastores) {
+
+  $name = $datastore.name
+
+  Write-Host "Processing Datastore $name :" -ForegroundColor Green
   Write-Host "Verifying if the datastore is on a 3PAR SAN array........ " -ForegroundColor Green  -nonewline
 
   $lun = Get-ScsiLun -Datastore $datastore.name
@@ -39,7 +53,7 @@ foreach ($datastore in Get-Datastore) {
     }
     Catch
     {
-      Write-Host "Error while verifying primitiv support on $($datastore.name)" -ForegroundColor red
+      Write-Host "Error while verifying primitiv support on $name" -ForegroundColor red
     }
 
     if ($vaai.ZeroStatus -eq 'supported') {
@@ -55,20 +69,20 @@ foreach ($datastore in Get-Datastore) {
         $asyncUnmapFileSize = [math]::Round($FreeSpace / 10)
 
         Write-Host "[OK]" -ForegroundColor cyan
-        Write-Host "Reclaiming free space on datastore $($datastore.name) with an asyncUnmapFile size of $asyncUnmapFileSize MB" -ForegroundColor Green
+        Write-Host "Reclaiming free space on datastore $name with an asyncUnmapFile size of $asyncUnmapFileSize MB" -ForegroundColor Green
 
         Try
         {
-          $result = $esxcli.storage.vmfs.unmap($asyncUnmapFileSize, $datastore.name, $null)
+          $result = $esxcli.storage.vmfs.unmap($asyncUnmapFileSize, $name, $null)
         }
         Catch [VMware.VimAutomation.Sdk.Types.V1.ErrorHandling.VimException.ViError]
         {
-          Write-Host "Error while reclaiming space on $($datastore.name) :" -ForegroundColor red
+          Write-Host "Error while reclaiming space on $name :" -ForegroundColor red
           Write-Verbose $_.Exception.Message
         }
 
       } else {
-        Write-Host "Datastore $($datastore.name) does not have enough free space, skip it." -ForegroundColor red
+        Write-Host "Datastore $name does not have enough free space, skip it." -ForegroundColor red
       }
     } else {
       Write-Host "[NOK]" -ForegroundColor red

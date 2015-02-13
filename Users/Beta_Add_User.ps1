@@ -3,6 +3,7 @@
 $accountName = "user"
 $accountPswd = "password"
 $accountDescription = "Description of the User"
+$role = "ReadOnly" #might be: Admin, ReadOnly, View, Anonymous, NoAccess
 
 # Name of the CSV file to import
 $csv_host = ".\hosts.csv"
@@ -23,7 +24,7 @@ foreach($esx in $esxlist){
     }
     Catch{
         $account = New-VMHostAccount -Id $accountName -Password $accountPswd -Description $accountDescription -UserAccount -GrantShellAccess
-        New-VIPermission -Entity $rootFolder -Principal $account -Role admin
+        New-VIPermission -Entity $rootFolder -Principal $account -Role $role
     }
     Disconnect-VIServer -Confirm:$false
 }
