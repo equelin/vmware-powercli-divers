@@ -1,17 +1,18 @@
 # Erwan Quelin
 
-# Run UNMAP (Space reclamation) on 3PAR datastores on a specified host
+# Run UNMAP (Space reclamation) on thin datastores on a specified host
+# TEsted with HP 3PAR Array
 
 #Script Version
-$sScriptVersion = "2.0"
+$sScriptVersion = "3.0"
 
 #Log File Info
 $sLogPath = "."
-$sLogName = "3PAR_UNMAP.log"
+$sLogName = "UNMAP.log"
 $sLogFile = Join-Path -Path $sLogPath -ChildPath $sLogName
 
-$esxi = 'esx-srv20.semitan.lan' #ESXi which will be used to run the UNMAP VAAI
-$vendor = '3PARdata'
+$esxi = 'esx1.domain.lan' #ESXi which will be used to run the UNMAP VAAI
+$vendor = '3PARdata' #might be 3PARdata, DGC (for VNX)
 
 ##################### DO NOT EDIT BEYOND THIS LINE ###########################
 
