@@ -2,7 +2,7 @@
 
 # Run UNMAP (Space reclamation) on 3PAR datastores on a specified host
 
-$esxi = 'esx-srv20.semitan.lan' #ESXi which will be used to run the UNMAP VAAI
+$esxi = 'esx1.domain.lan' #ESXi which will be used to run the UNMAP VAAI
 $vendor = '3PARdata'
 
 ##################### DO NOT EDIT BEYOND THIS LINE ###########################
