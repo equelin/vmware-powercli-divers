@@ -272,7 +272,7 @@ foreach ($datastore in Get-Datastore) {
   $timestamp = $((get-date).ToString("yyyyMMdd-HHmmss"))
   Log-Write -LogPath $sLogFile -LineValue "$timestamp - Processing Datastore $($datastore.name)"
   if ((Is3PARArray) -and (UNMAPSupport) -and (DatastoreAccessible) -and (EnoughFreeSpace)) {
-    #ReclaimSpace
+    ReclaimSpace
     Log-Write -LogPath $sLogFile -LineValue 'ReclaimSpace'
   }
 }
