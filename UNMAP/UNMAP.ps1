@@ -8,6 +8,7 @@
   If you want to use automated task, don't forget to use:
   New-VICredentialStoreItem -Host $esxi -User root -Password "Super$ecretPassword"
   Based on the work of Luca Sturlese for logs files
+  More infos on http://www.boche.net/blog/index.php/2013/09/13/vsphere-5-5-unmap-deep-dive/
 
 .INPUTS
   None
@@ -40,6 +41,10 @@ $sLogName = 'UNMAP.log'
 $esxi = 'esx1.domain.local' #ESXi which will be used to run the UNMAP VAAI
 $vendor = '3PARdata' #might be 3PARdata, DGC (for VNX)
 
+#Ratio used to define the asyncUnmapFile size
+$asyncUnmapFilePourcentage = 10
+
+#Email parameters
 $EmailFrom = 'from@domain.local'
 $EmailTo = 'to@domain.local'
 $EmailSubject = 'UNMAP Script Report'
@@ -62,7 +67,7 @@ function HostConnexion {
 
 function ReclaimSpace {
   [int]$FreeSpace = $datastore.FreeSpaceMB
-  $asyncUnmapFileSize = [math]::Round($FreeSpace / 10)
+  $asyncUnmapFileSize = [math]::Round($FreeSpace / $asyncUnmapFilePourcentage)
   Log-Write -LogPath $sLogFile -LineValue "Reclaiming free space on datastore $($datastore.name) with an asyncUnmapFile size of $asyncUnmapFileSize MB"
   Try {
     $result = $esxcli.storage.vmfs.unmap($asyncUnmapFileSize, $datastore.name, $null)
