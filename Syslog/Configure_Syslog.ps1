@@ -16,16 +16,15 @@ $vcenter = read-host "Enter vCenter/host IP or FQDN"
 Write-Host "Connection to the vCenter $vcenter" -ForegroundColor Green
 Connect-VIServer -Server $vcenter
 
-$VMlist = get-VM
+$esxHosts = get-VMHost
 
-foreach ($VM in $VMlist) {
-  $name = $VM.name
+foreach ($esx in $esxHosts) {
 
-  Write-Host "Verifying $name" -ForegroundColor Green
+  Write-Host "Verifying $($esx.name)" -ForegroundColor Green
   $esx | Set-VMHostAdvancedConfiguration -NameValue @{'Config.HostAgent.log.level'='info';'Vpx.Vpxa.config.log.level'='info';'Syslog.global.logHost'= $SyslogServer}
 
-  Write-Host "*** Configuring firewall exception on $name" -ForegroundColor Green
-  Get-VMHostFirewallException -VMhost $name -name syslog | Set-VMHostFirewallException -Enabled $true
+  Write-Host "*** Configuring firewall exception on $($esx.name)" -ForegroundColor Green
+  Get-VMHostFirewallException -VMhost $esx.name -name syslog | Set-VMHostFirewallException -Enabled $true
 
   write-host
 }
